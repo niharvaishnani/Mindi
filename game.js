@@ -184,10 +184,7 @@
   // ======================== LOBBY – MODE SELECTION ========================
   function initLobby() {
     DOM.lobby.btnModeLocal.addEventListener('click', () => { sfxClick(); showLocalSetup(); });
-    DOM.lobby.btnModeOnline.addEventListener('click', () => { 
-      sfxClick(); 
-      alert("Online play is currently in testing mode and temporarily disabled. Please use Local Play for now!");
-    });
+    DOM.lobby.btnModeOnline.addEventListener('click', () => { sfxClick(); showOnlineSetup(); });
     DOM.lobby.btnBackLocal.addEventListener('click', () => { sfxClick(); showModeSelection(); });
     DOM.lobby.btnBackOnline.addEventListener('click', () => { sfxClick(); showModeSelection(); });
 
@@ -685,9 +682,14 @@
   function advanceTurn() {
     const active = getActivePlayers();
     if (active.length <= 1) return;
-    let next = (state.currentPlayerIdx + 1) % state.players.length;
-    while (state.players[next].safe || state.players[next].eliminated) next = (next + 1) % state.players.length;
-    state.currentPlayerIdx = next;
+    
+    // Only increment turn index if local play or if we are the host
+    if (state.gameMode === 'local' || Multiplayer.getIsHost()) {
+      let next = (state.currentPlayerIdx + 1) % state.players.length;
+      while (state.players[next].safe || state.players[next].eliminated) next = (next + 1) % state.players.length;
+      state.currentPlayerIdx = next;
+    }
+
     sfxTurnChange();
     if (state.gameMode === 'online') {
       if (Multiplayer.getIsHost()) pushHostState();
