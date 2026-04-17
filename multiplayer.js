@@ -10,7 +10,7 @@ const Multiplayer = (() => {
   let listeners = [];
   let heartbeatInterval = null;
 
-  const ROOM_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+  const ROOM_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
 
   // ---- Helpers ----
   function generateRoomCode() {
