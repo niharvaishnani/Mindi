@@ -200,7 +200,6 @@
       sfxClick(); addPlayerInputRow(rows.length); updateRemoveButtons();
     });
     DOM.lobby.btnStart.addEventListener('click', startLocalGame);
-    DOM.lobby.toggleTimer.addEventListener('change', e => { state.timerEnabled = e.target.checked; });
     DOM.lobby.toggleSound.addEventListener('change', e => { state.soundEnabled = e.target.checked; });
     updateRemoveButtons();
 
@@ -213,10 +212,6 @@
     DOM.room.btnCopy.addEventListener('click', copyRoomCode);
     DOM.room.btnLeave.addEventListener('click', handleLeaveRoom);
     DOM.room.btnStart.addEventListener('click', handleRoomStart);
-    if (DOM.room.toggleTimer) DOM.room.toggleTimer.addEventListener('change', e => {
-      state.timerEnabled = e.target.checked;
-      if (Multiplayer.getIsHost()) Multiplayer.updateSettings({ timerEnabled: e.target.checked });
-    });
     if (DOM.room.toggleSound) DOM.room.toggleSound.addEventListener('change', e => { state.soundEnabled = e.target.checked; });
 
     // Result Screen
@@ -621,6 +616,7 @@
   }
 
   function updateOnlineTurn() {
+    if (state.phase === 'result') return;
     const player = state.players[state.currentPlayerIdx];
     if (!player) return;
     DOM.game.turnName.classList.remove('turn-name-animate');
@@ -721,6 +717,7 @@
   }
 
   function updateTurn() {
+    if (state.phase === 'result') return;
     const player = state.players[state.currentPlayerIdx];
     DOM.game.turnName.classList.remove('turn-name-animate');
     DOM.game.turnName.offsetHeight;
@@ -873,6 +870,7 @@
 
   // ======================== END GAME ========================
   function endGame() {
+    if (state.phase === 'result') return;
     clearTimer();
     const safePlayers = state.players.filter(p => p.safe);
     const remaining = getActivePlayers();
