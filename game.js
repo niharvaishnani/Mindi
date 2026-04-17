@@ -184,10 +184,7 @@
   // ======================== LOBBY – MODE SELECTION ========================
   function initLobby() {
     DOM.lobby.btnModeLocal.addEventListener('click', () => { sfxClick(); showLocalSetup(); });
-    DOM.lobby.btnModeOnline.addEventListener('click', () => { 
-      sfxClick(); 
-      alert("Online play is currently in testing mode and temporarily disabled. Please use Local Play for now!");
-    });
+    DOM.lobby.btnModeOnline.addEventListener('click', () => { sfxClick(); showOnlineSetup(); });
     DOM.lobby.btnBackLocal.addEventListener('click', () => { sfxClick(); showModeSelection(); });
     DOM.lobby.btnBackOnline.addEventListener('click', () => { sfxClick(); showModeSelection(); });
 
