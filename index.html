@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="description" content="Secret Number Survival - A thrilling multiplayer number guessing game where players secretly choose numbers and try to survive elimination.">
+  <meta name="theme-color" content="#0a0a1a">
+  <title>Secret Number Survival | Multiplayer Party Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+      <div class="orb orb-4"></div>
+    </div>
+
+    <!-- Floating Particles Canvas -->
+    <canvas id="particle-canvas" class="particle-canvas"></canvas>
+
+    <!-- ==================== SCREEN 1: LOBBY ==================== -->
+    <section id="screen-lobby" class="screen active">
+      <div class="lobby-container">
+        <div class="logo-area">
+          <div class="logo-icon">🎯</div>
+          <h1 class="game-title">Secret Number<br><span class="title-accent">Survival</span></h1>
+          <p class="game-subtitle">Choose wisely. Survive the hunt.</p>
+        </div>
+
+        <div class="lobby-card glass-card">
+          <h2 class="card-title">Player Setup</h2>
+          <p class="card-desc">Enter 2–10 player names to begin</p>
+
+          <div id="player-inputs" class="player-inputs">
+            <div class="input-row" data-index="0">
+              <span class="input-icon">👤</span>
+              <input type="text" class="player-name-input" placeholder="Player 1" maxlength="16" autocomplete="off">
+              <button class="btn-remove-player" title="Remove player" style="visibility:hidden">✕</button>
+            </div>
+            <div class="input-row" data-index="1">
+              <span class="input-icon">👤</span>
+              <input type="text" class="player-name-input" placeholder="Player 2" maxlength="16" autocomplete="off">
+              <button class="btn-remove-player" title="Remove player" style="visibility:hidden">✕</button>
+            </div>
+          </div>
+
+          <div class="lobby-actions">
+            <button id="btn-add-player" class="btn btn-secondary">
+              <span>＋</span> Add Player
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-timer" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Turn Timer (10s)</span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-sound" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Sound Effects</span>
+            </label>
+          </div>
+
+          <button id="btn-start" class="btn btn-primary btn-lg btn-glow">
+            Start Game →
+          </button>
+          <p id="lobby-error" class="error-msg"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SCREEN 2: SECRET SELECTION ==================== -->
+    <section id="screen-select" class="screen">
+      <div class="select-container">
+        <div class="select-header">
+          <h2 class="section-title">🤫 Secret Selection</h2>
+          <p id="select-instruction" class="section-desc">Player, choose your secret number!</p>
+        </div>
+
+        <div class="select-player-card glass-card">
+          <div class="select-avatar" id="select-avatar">🎭</div>
+          <h3 id="select-player-name" class="select-pname">Player Name</h3>
+          <p class="select-hint">Pick ONE number. Keep it secret!</p>
+        </div>
+
+        <div id="select-grid" class="number-grid select-number-grid"></div>
+
+        <button id="btn-confirm-select" class="btn btn-primary btn-lg btn-glow" disabled>
+          Confirm Selection ✓
+        </button>
+
+        <div id="pass-device-overlay" class="pass-overlay hidden">
+          <div class="pass-card glass-card">
+            <div class="pass-icon">📱</div>
+            <h3 id="pass-text">Pass the device to the next player</h3>
+            <p id="pass-next-name" class="pass-next"></p>
+            <button id="btn-pass-ready" class="btn btn-primary btn-glow">I'm Ready</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SCREEN 3: GAME BOARD ==================== -->
+    <section id="screen-game" class="screen">
+      <div class="game-layout">
+        <!-- Left Sidebar: Players -->
+        <aside class="sidebar sidebar-left glass-card">
+          <h3 class="sidebar-title">Players</h3>
+          <ul id="player-list" class="player-list"></ul>
+        </aside>
+
+        <!-- Center: Board -->
+        <main class="game-main">
+          <div class="turn-banner glass-card">
+            <div class="turn-info">
+              <span class="turn-label">Current Turn</span>
+              <h2 id="turn-player-name" class="turn-name">Player</h2>
+            </div>
+            <div id="timer-container" class="timer-container">
+              <svg class="timer-ring" viewBox="0 0 60 60">
+                <circle class="timer-track" cx="30" cy="30" r="26"/>
+                <circle id="timer-progress" class="timer-fill" cx="30" cy="30" r="26"/>
+              </svg>
+              <span id="timer-text" class="timer-text">10</span>
+            </div>
+          </div>
+
+          <p class="game-instruction">Tap a number to remove it from the grid</p>
+
+          <div id="game-grid" class="number-grid game-number-grid"></div>
+        </main>
+
+        <!-- Right Sidebar: History -->
+        <aside class="sidebar sidebar-right glass-card">
+          <h3 class="sidebar-title">Removed</h3>
+          <div id="removed-list" class="removed-list"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ==================== SCREEN 4: RESULT ==================== -->
+    <section id="screen-result" class="screen">
+      <canvas id="celebration-canvas" class="celebration-canvas"></canvas>
+      <div class="result-container">
+        <div id="result-card" class="result-card glass-card">
+          <div id="result-icon" class="result-icon">🏆</div>
+          <h2 id="result-title" class="result-title">Game Over!</h2>
+          <p id="result-message" class="result-message"></p>
+          <div id="result-players" class="result-players"></div>
+          <button id="btn-play-again" class="btn btn-primary btn-lg btn-glow">
+            🔄 Play Again
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Safe Notification -->
+    <div id="safe-notification" class="safe-notification hidden">
+      <div class="safe-content">
+        <span class="safe-icon">🛡️</span>
+        <span id="safe-text" class="safe-text">Player is SAFE!</span>
+      </div>
+    </div>
+
+    <!-- Both Safe Notification -->
+    <div id="both-safe-notification" class="both-safe-notification hidden">
+      <div class="both-safe-content glass-card">
+        <span class="both-safe-icon">🎉</span>
+        <h3 id="both-safe-text" class="both-safe-text">Both players guessed the same number! Both are safe!</h3>
+      </div>
+    </div>
+
+    <!-- Self-Elimination Notification -->
+    <div id="self-elim-notification" class="self-elim-notification hidden">
+      <div class="self-elim-content glass-card">
+        <span class="self-elim-icon">💀</span>
+        <h3 id="self-elim-text" class="self-elim-text">You picked your own number!</h3>
+        <p id="self-elim-sub" class="self-elim-sub">You lose the game!</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
