@@ -38,7 +38,22 @@
           <p class="game-subtitle">Choose wisely. Survive the hunt.</p>
         </div>
 
-        <div class="lobby-card glass-card">
+        <!-- Mode Selection -->
+        <div id="mode-selection" class="mode-selection">
+          <button id="btn-mode-local" class="mode-card glass-card" data-mode="local">
+            <span class="mode-icon">📱</span>
+            <h3 class="mode-title">Local Play</h3>
+            <p class="mode-desc">Pass & play on one device</p>
+          </button>
+          <button id="btn-mode-online" class="mode-card glass-card" data-mode="online">
+            <span class="mode-icon">🌐</span>
+            <h3 class="mode-title">Online Play</h3>
+            <p class="mode-desc">Play with friends remotely</p>
+          </button>
+        </div>
+
+        <!-- Local Setup (existing) -->
+        <div id="local-setup" class="lobby-card glass-card" style="display:none;">
           <h2 class="card-title">Player Setup</h2>
           <p class="card-desc">Enter 2–10 player names to begin</p>
 
@@ -78,7 +93,101 @@
             Start Game →
           </button>
           <p id="lobby-error" class="error-msg"></p>
+
+          <button id="btn-back-to-modes" class="btn btn-secondary btn-back">← Back</button>
         </div>
+
+        <!-- Online Setup -->
+        <div id="online-setup" class="lobby-card glass-card" style="display:none;">
+          <h2 class="card-title">Online Play</h2>
+          <p class="card-desc">Create or join a room to play with friends</p>
+
+          <div class="online-name-row">
+            <div class="input-row">
+              <span class="input-icon">👤</span>
+              <input type="text" id="online-player-name" class="player-name-input" placeholder="Your Name" maxlength="16" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="online-actions">
+            <button id="btn-create-room" class="btn btn-primary btn-lg">
+              🏠 Create Room
+            </button>
+            <div class="online-divider"><span>OR</span></div>
+            <div class="join-row">
+              <input type="text" id="join-room-code" class="room-code-input" placeholder="ROOM CODE" maxlength="6" autocomplete="off" spellcheck="false">
+              <button id="btn-join-room" class="btn btn-primary">
+                Join →
+              </button>
+            </div>
+          </div>
+
+          <p id="online-error" class="error-msg"></p>
+
+          <button id="btn-back-to-modes-online" class="btn btn-secondary btn-back">← Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SCREEN: ROOM LOBBY ==================== -->
+    <section id="screen-room-lobby" class="screen">
+      <div class="lobby-container room-lobby-container">
+        <div class="logo-area room-logo">
+          <div class="logo-icon" style="font-size:2.5rem;">🎯</div>
+          <h2 class="game-title" style="font-size:1.6rem;">Secret Number <span class="title-accent">Survival</span></h2>
+        </div>
+
+        <div class="room-code-display glass-card">
+          <span class="room-code-label">Room Code</span>
+          <div class="room-code-value" id="room-code-display">------</div>
+          <button id="btn-copy-code" class="btn btn-secondary btn-sm" title="Copy code">
+            📋 Copy
+          </button>
+        </div>
+
+        <div class="room-players-card glass-card">
+          <h3 class="card-title">Players <span id="room-player-count" class="player-count-badge">0/10</span></h3>
+          <ul id="room-player-list" class="room-player-list"></ul>
+
+          <!-- Connection Status -->
+          <div class="connection-status" id="connection-status">
+            <span class="conn-dot connected"></span>
+            <span class="conn-text">Connected</span>
+          </div>
+        </div>
+
+        <!-- Host-only settings -->
+        <div id="room-host-settings" class="room-settings glass-card" style="display:none;">
+          <div class="settings-row">
+            <label class="toggle-label">
+              <input type="checkbox" id="room-toggle-timer" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Turn Timer (10s)</span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="room-toggle-sound" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Sound Effects</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Host: Start Game button -->
+        <button id="btn-room-start" class="btn btn-primary btn-lg btn-glow" style="display:none;" disabled>
+          Start Game →
+        </button>
+
+        <!-- Non-host: waiting message -->
+        <div id="room-waiting-msg" class="waiting-message" style="display:none;">
+          <div class="waiting-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <p>Waiting for host to start the game...</p>
+        </div>
+
+        <button id="btn-leave-room" class="btn btn-secondary btn-back">
+          🚪 Leave Room
+        </button>
       </div>
     </section>
 
@@ -101,6 +210,15 @@
         <button id="btn-confirm-select" class="btn btn-primary btn-lg btn-glow" disabled>
           Confirm Selection ✓
         </button>
+
+        <!-- Online: waiting for others indicator -->
+        <div id="online-select-waiting" class="online-waiting-panel" style="display:none;">
+          <div class="waiting-card glass-card">
+            <div class="waiting-dots"><span></span><span></span><span></span></div>
+            <h3>Waiting for other players...</h3>
+            <div id="select-progress" class="select-progress"></div>
+          </div>
+        </div>
 
         <div id="pass-device-overlay" class="pass-overlay hidden">
           <div class="pass-card glass-card">
@@ -138,7 +256,15 @@
             </div>
           </div>
 
-          <p class="game-instruction">Tap a number to remove it from the grid</p>
+          <p id="game-instruction" class="game-instruction">Tap a number to remove it from the grid</p>
+
+          <!-- Online: Not your turn overlay -->
+          <div id="not-your-turn" class="not-your-turn-overlay" style="display:none;">
+            <div class="nyt-content">
+              <div class="waiting-dots"><span></span><span></span><span></span></div>
+              <p id="nyt-text">Waiting for opponent's move...</p>
+            </div>
+          </div>
 
           <div id="game-grid" class="number-grid game-number-grid"></div>
         </main>
@@ -193,6 +319,11 @@
     </div>
   </div>
 
+  <!-- Firebase SDK (compat mode) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="multiplayer.js"></script>
   <script src="game.js"></script>
 </body>
 
