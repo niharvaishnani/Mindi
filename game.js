@@ -780,8 +780,20 @@
       cell.classList.add('removed'); updatePlayerList();
       if (state.gameMode === 'online' && Multiplayer.getIsHost()) pushHostState();
       const rem = getActivePlayers();
-      if (rem.length <= 1) setTimeout(() => endGame(), 600);
-      else advanceTurn();
+      
+      if (rem.length <= 1) {
+        setTimeout(() => endGame(), 600);
+      } else if (rem.length === 2 && state.removedNumbers.length === state.maxNumber - 1) {
+        // Only 1 number left, and 2 players are still alive. This means they share the same final secret number!
+        sfxLose();
+        rem.forEach(p => { p.eliminated = true; }); updatePlayerList();
+        if (state.gameMode === 'online' && Multiplayer.getIsHost()) pushHostState();
+        showSelfElimNotification("No safe numbers left!", `The final number is your secret — both lose! 💀`);
+        setTimeout(() => { hideSelfElimNotification(); setTimeout(() => endGame(), 500); if(callback) callback(); }, 3500);
+        return;
+      } else {
+        advanceTurn();
+      }
       if(callback) callback();
     }, 700);
   }
