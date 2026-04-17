@@ -309,6 +309,7 @@
       state.myPlayerId = playerId;
       state.roomCode = code;
       state.gameMode = 'online';
+      saveSession(code, playerId, true, name);
       enterRoomLobby(true);
     } catch (e) {
       DOM.lobby.onlineError.textContent = e.message || 'Failed to create room.';
@@ -333,6 +334,7 @@
       state.myPlayerId = playerId;
       state.roomCode = code;
       state.gameMode = 'online';
+      saveSession(code, playerId, false, name);
       enterRoomLobby(false);
     } catch (e) {
       DOM.lobby.onlineError.textContent = e.message || 'Failed to join room.';
@@ -409,11 +411,14 @@
 
   async function handleLeaveRoom() {
     sfxClick();
+    clearSession();
     await Multiplayer.leaveRoom();
     resetToLobby();
   }
 
   function resetToLobby() {
+    clearSession();
+    removeBeforeUnloadGuard();
     Multiplayer.destroy();
     state.gameMode = 'local';
     state.myPlayerId = null;
@@ -564,6 +569,7 @@
 
     showScreen('game');
     renderPlayerList(); renderGameGrid(); updateOnlineTurn();
+    addBeforeUnloadGuard();
 
     // Listen for game state changes from host
     Multiplayer.onGameStateChange(gs => {
@@ -963,8 +969,40 @@
     state.players = []; state.numbers = []; state.removedNumbers = []; tempSelectedNumber = null;
   });
 
+  // ======================== SESSION PERSISTENCE ========================
+  function saveSession(code, pid, host, name) {
+    sessionStorage.setItem('sns_session', JSON.stringify({ code, pid, host, name }));
+  }
+
+  function clearSession() {
+    sessionStorage.removeItem('sns_session');
+  }
+
+  function getSavedSession() {
+    try { return JSON.parse(sessionStorage.getItem('sns_session')); } catch { return null; }
+  }
+
+  // ======================== BEFOREUNLOAD GUARD ========================
+  let _beforeUnloadHandler = null;
+  function addBeforeUnloadGuard() {
+    if (_beforeUnloadHandler) return;
+    _beforeUnloadHandler = (e) => {
+      e.preventDefault();
+      e.returnValue = 'You are in an active game. If you refresh, you may lose your progress.';
+      return e.returnValue;
+    };
+    window.addEventListener('beforeunload', _beforeUnloadHandler);
+  }
+
+  function removeBeforeUnloadGuard() {
+    if (_beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', _beforeUnloadHandler);
+      _beforeUnloadHandler = null;
+    }
+  }
+
   // ======================== INIT ========================
-  function init() {
+  async function init() {
     initLobby(); initParticles();
     DOM.lobby.playerInputs.querySelectorAll('.btn-remove-player').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -982,6 +1020,33 @@
     document.addEventListener('touchend', e => {
       if (e.target.closest('.num-cell') || e.target.closest('.btn')) { e.preventDefault(); e.target.click(); }
     }, {passive:false});
+
+    // --- Attempt session restore after refresh ---
+    const saved = getSavedSession();
+    if (saved && saved.code && saved.pid) {
+      try {
+        const { status, room } = await Multiplayer.rejoinRoom(saved.code, saved.pid, saved.host);
+        state.myPlayerId = saved.pid;
+        state.roomCode = saved.code;
+        state.gameMode = 'online';
+
+        if (status === 'waiting') {
+          enterRoomLobby(saved.host);
+        } else if (status === 'selecting') {
+          // Re-enter room lobby and it will auto-navigate via status listener
+          enterRoomLobby(saved.host);
+        } else if (status === 'playing') {
+          state.onlinePlayers = room.players || {};
+          startOnlineGameplay();
+        } else if (status === 'finished') {
+          enterRoomLobby(saved.host);
+        } else {
+          clearSession();
+        }
+      } catch (e) {
+        clearSession(); // Room gone or player removed — just go to lobby normally
+      }
+    }
   }
 
   init();

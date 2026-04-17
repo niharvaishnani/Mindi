@@ -175,6 +175,42 @@ const Multiplayer = (() => {
     return { code, playerId };
   }
 
+  async function rejoinRoom(code, savedPlayerId, savedIsHost) {
+    code = code.toUpperCase().trim();
+    roomCode = code;
+    roomRef = db.ref('rooms/' + code);
+    playerId = savedPlayerId;
+    isHost = savedIsHost;
+
+    let snap;
+    try {
+      snap = await Promise.race([
+        roomRef.once('value'),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 5000))
+      ]);
+    } catch (e) {
+      throw new Error('Could not reconnect to room.');
+    }
+
+    if (!snap.exists()) {
+      throw new Error('ROOM_GONE');
+    }
+
+    const room = snap.val();
+    // Check our player still exists in the room
+    if (!room.players || !room.players[savedPlayerId]) {
+      throw new Error('PLAYER_GONE');
+    }
+
+    // Re-mark as connected
+    await roomRef.child('players/' + playerId + '/connected').set(true);
+
+    setupPresence();
+    startHeartbeat();
+
+    return { code, playerId, status: room.status, room };
+  }
+
   async function leaveRoom() {
     stopHeartbeat();
     removeAllListeners();
@@ -414,6 +450,7 @@ const Multiplayer = (() => {
   return {
     createRoom,
     joinRoom,
+    rejoinRoom,
     leaveRoom,
     updateSettings,
     onPlayersChange,
