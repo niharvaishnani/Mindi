@@ -168,7 +168,12 @@
       removedList:$('#removed-list'), instruction:$('#game-instruction'),
       notYourTurn:$('#not-your-turn'), nytText:$('#nyt-text')
     },
-    result: { icon:$('#result-icon'), title:$('#result-title'), message:$('#result-message'), players:$('#result-players'), btnAgain:$('#btn-play-again') },
+    result: { 
+      icon:$('#result-icon'), title:$('#result-title'), message:$('#result-message'), 
+      players:$('#result-players'), btnAgain:$('#btn-play-again'),
+      onlineActions:$('#online-result-actions'), btnContinue:$('#btn-continue-room'),
+      hostWaitingMsg:$('#online-host-waiting-msg'), btnLeaveResult:$('#btn-leave-result')
+    },
     safeNotif:$('#safe-notification'), safeText:$('#safe-text'),
     bothSafeNotif:$('#both-safe-notification'), bothSafeText:$('#both-safe-text'),
     selfElimNotif:$('#self-elim-notification'), selfElimText:$('#self-elim-text'), selfElimSub:$('#self-elim-sub')
@@ -742,7 +747,7 @@
         showSelfElimNotification(`${currentPlayer.name} picked their own number!`, `Number ${num} was your secret — you lose! 💀`);
         setTimeout(() => {
           hideSelfElimNotification(); cell.classList.add('removed'); updatePlayerList();
-          if (Multiplayer.getIsHost && state.gameMode === 'online') pushHostState();
+          if (Multiplayer.getIsHost() && state.gameMode === 'online') pushHostState();
           const rem = getActivePlayers();
           if (rem.length <= 1) { setTimeout(() => endGame(), 600); }
           else advanceTurn();
@@ -754,11 +759,12 @@
 
     if (matched.length > 0) {
       if (activePlayers.length === 2 && matched.length === 2) {
-        cell.classList.add('safe-reveal'); sfxBothSafe();
-        matched.forEach(p => { p.safe = true; }); updatePlayerList(); addRemovedChip(num, true);
+        // Both players picked the same number and they are the last 2 remaining!
+        cell.classList.add('removing'); sfxLose();
+        matched.forEach(p => { p.eliminated = true; }); updatePlayerList(); addRemovedChip(num, false);
         setTimeout(() => {
-          showBothSafeNotification("Both players guessed the same number! Both are safe!");
-          setTimeout(() => { hideBothSafeNotification(); setTimeout(() => endGame(), 500); if(callback) callback(); }, 3000);
+          showSelfElimNotification("Both players have the same secret number!", `Number ${num} was your secret — both lose! 💀`);
+          setTimeout(() => { hideSelfElimNotification(); setTimeout(() => endGame(), 500); if(callback) callback(); }, 3500);
         }, 800);
         return;
       }
