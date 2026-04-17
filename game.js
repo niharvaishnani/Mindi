@@ -216,6 +216,18 @@
       if (Multiplayer.getIsHost()) Multiplayer.updateSettings({ timerEnabled: e.target.checked });
     });
     if (DOM.room.toggleSound) DOM.room.toggleSound.addEventListener('change', e => { state.soundEnabled = e.target.checked; });
+
+    // Result Screen
+    DOM.result.btnContinue.addEventListener('click', async () => {
+      sfxClick();
+      DOM.result.btnContinue.disabled = true;
+      await Multiplayer.hostReturnToWaiting();
+      DOM.result.btnContinue.disabled = false;
+    });
+
+    DOM.result.btnLeaveResult.addEventListener('click', () => {
+      handleLeaveRoom();
+    });
   }
 
   function showModeSelection() {
@@ -360,6 +372,10 @@
         startOnlineSecretSelection();
       } else if (status === 'playing') {
         startOnlineGameplay();
+      } else if (status === 'waiting' && state.phase === 'result') {
+        // Returned to waiting from the results screen! 
+        // Our player list and connection listeners are still active under the hood!
+        showScreen('roomLobby');
       } else if (status === 'finished') {
         // Result handled via game state
       } else if (status === null) {
@@ -732,7 +748,6 @@
           if (Multiplayer.getIsHost && state.gameMode === 'online') pushHostState();
           const rem = getActivePlayers();
           if (rem.length <= 1) { setTimeout(() => endGame(), 600); }
-          else if (checkAllSameNumberTrap()) handleAllSameTrap();
           else advanceTurn();
           if(callback) callback();
         }, 3000);
@@ -766,7 +781,6 @@
       if (state.gameMode === 'online' && Multiplayer.getIsHost()) pushHostState();
       const rem = getActivePlayers();
       if (rem.length <= 1) setTimeout(() => endGame(), 600);
-      else if (checkAllSameNumberTrap()) handleAllSameTrap();
       else advanceTurn();
       if(callback) callback();
     }, 700);
@@ -883,6 +897,22 @@
       state.players.forEach((p,i) => setTimeout(()=>addResultChip(p.name,p.avatar,p.safe), i*100));
     }
 
+    if (state.gameMode === 'online') {
+      DOM.result.btnAgain.style.display = 'none';
+      DOM.result.onlineActions.style.display = 'flex';
+      
+      if (Multiplayer.getIsHost()) {
+        DOM.result.btnContinue.style.display = '';
+        DOM.result.hostWaitingMsg.style.display = 'none';
+      } else {
+        DOM.result.btnContinue.style.display = 'none';
+        DOM.result.hostWaitingMsg.style.display = '';
+      }
+    } else {
+      DOM.result.btnAgain.style.display = '';
+      DOM.result.onlineActions.style.display = 'none';
+    }
+
     if (state.gameMode === 'online' && Multiplayer.getIsHost()) {
       Multiplayer.hostEndGame();
       pushHostState();
@@ -913,18 +943,11 @@
   }
 
   // ======================== PLAY AGAIN ========================
-  DOM.result.btnAgain.addEventListener('click', async () => {
+  DOM.result.btnAgain.addEventListener('click', () => {
     sfxClick(); stopCelebration();
-    if (state.gameMode === 'online') {
-      if (Multiplayer.getIsHost()) {
-        await Multiplayer.hostReturnToWaiting();
-      }
-      enterRoomLobby(Multiplayer.getIsHost());
-    } else {
-      showScreen('lobby'); showLocalSetup();
-      DOM.lobby.error.textContent = '';
-      state.players = []; state.numbers = []; state.removedNumbers = []; tempSelectedNumber = null;
-    }
+    showScreen('lobby'); showLocalSetup();
+    DOM.lobby.error.textContent = '';
+    state.players = []; state.numbers = []; state.removedNumbers = []; tempSelectedNumber = null;
   });
 
   // ======================== INIT ========================

@@ -289,6 +289,19 @@
           <button id="btn-play-again" class="btn btn-primary btn-lg btn-glow">
             🔄 Play Again
           </button>
+          
+          <!-- Online Play uses these -->
+          <div id="online-result-actions" style="display:none; width: 100%; flex-direction: column; gap: 10px; margin-top: 15px;">
+            <button id="btn-continue-room" class="btn btn-primary btn-lg btn-glow">
+              🔄 Continue Game (Same Room)
+            </button>
+            <p id="online-host-waiting-msg" style="display:none; color: var(--accent-warning); font-size: 0.9rem; text-align: center; margin-bottom: 5px; margin-top: 5px;">
+              Waiting for host to continue...
+            </p>
+            <button id="btn-leave-result" class="btn btn-secondary btn-lg" style="background: rgba(255, 30, 86, 0.1); border-color: rgba(255, 30, 86, 0.4); color: var(--accent-danger);">
+              🚪 Leave Room
+            </button>
+          </div>
         </div>
       </div>
     </section>
